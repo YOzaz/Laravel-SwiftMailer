@@ -80,6 +80,11 @@ Well, then this package is not really required for you. Just follow approach in 
 
 Package supports only Laravel 4 only at the moment. However, if you have spare time to adopt it (shouldn't be difficult) - feel free to create a pull request.
 
+## @todo
+
+* Package may throw an error, if "pretending" flag is set.
+* ok ok. Laravel 5 support.
+
 ## Credits
 
 All credits go to [xdecock](https://github.com/xdecock), author of [Swift Mailer](https://github.com/xdecock/swiftmailer), for providing ready-made solution implemented in this package.
