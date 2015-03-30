@@ -1,4 +1,4 @@
-# Laravel 4 and SwitfMailer integrator
+# Laravel 4 and SwiftMailer integrator
 
 Package, which tries to solve long-term daemon worker issue.
 For reference:
@@ -32,6 +32,10 @@ That's it! You're all set to go.
 
 Package is built in a way, that nothing special needs to be done. It's basically a wrapper, which calls additional SwiftMailer transport reset functions before email is being sent.
 So all `Mailer::send()` and similar functions will work out of the box.
+
+## What about Laravel 5?
+
+Package supports only Laravel 4 only at the moment. However, if you have spare time to adopt it (shouldn't be difficult) - feel free to create a pull request.
 
 ## License
 
