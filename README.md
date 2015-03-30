@@ -30,8 +30,9 @@ That's it! You're all set to go.
 
 ## Usage
 
-Package is built in a way, that nothing special needs to be done. It's basically a wrapper, which calls additional SwiftMailer transport reset functions before email is being sent.
-So all `Mailer::send()` and similar functions will work out of the box.
+Package is built in a way, that nothing special needs to be done. It's basically a wrapper, so all `Mailer::send()` and similar functions will work out of the box.
+
+However, real magic starts when emails are sent through [Beanstalkd](https://github.com/kr/beanstalkd) + [Supervisor](http://supervisord.org/) + [Laravel Queue Daemon Worker](http://laravel.com/docs/4.2/queues#daemon-queue-worker) (as an example) architecture. To maintain stable connection, package makes safe-error calls to SwiftMailer transport reset functions before email is being sent. 
 
 ## What about Laravel 5?
 
