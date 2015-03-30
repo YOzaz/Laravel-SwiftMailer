@@ -58,6 +58,8 @@ var $mailer_explicit = new \YOzaz\LaravelSwiftmailer\Mailer( App::make('mailer')
 // Custom instance
 var $mailer_custom = new \YOzaz\LaravelSwiftmailer\Mailer();
 $mailer_custom->setMailer( App::make('mailer') );
+// Shorter syntax for above
+var $mailer_custom = Mailer::setMailer( App::make('mailer') );
 ```
 
 ### If you're instantiating Mailer object manually
