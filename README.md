@@ -42,6 +42,36 @@ Package is built in a way, that nothing special needs to be done. It's basically
 
 However, real magic starts when emails are sent through [Beanstalkd](https://github.com/kr/beanstalkd) + [Supervisor](http://supervisord.org/) + [Laravel Queue Daemon Worker](http://laravel.com/docs/4.2/queues#daemon-queue-worker) (as an example) architecture. To maintain stable connection, package makes safe-error calls to SwiftMailer transport reset functions before email is being sent. 
 
+### If you're using Facaders
+
+Nothing needs to be changed.
+
+### If you're using IoC binding
+
+Just initialize `\YOzaz\LaravelSwiftmailer\Mailer`. Optionaly you can pass instance of `\Illuminate\Mail\Mailer` to constructor, or set it later on regarding your needs:
+
+```php
+// automatic resolving
+var $mailer_auto = new \YOzaz\LaravelSwiftmailer\Mailer();
+// Explicit instance
+var $mailer_explicit = new \YOzaz\LaravelSwiftmailer\Mailer( App::make('mailer') );
+// Custom instance
+var $mailer_custom = new \YOzaz\LaravelSwiftmailer\Mailer();
+$mailer_custom->setMailer( App::make('mailer') );
+```
+
+### If you're instantiating Mailer object manually
+
+After instantiating `\Illuminate\Mail\Mailer`, you need to instantiate `\YOzaz\LaravelSwiftmailer\Mailer` and pass it to constructor:
+
+```php
+var $mailer = new \YOzaz\LaravelSwiftmailer\Mailer( App::make('mailer') );
+```
+
+### If you're initializing Swift_Mailer manually
+
+Well, then this package is not really required for you. Just follow approach in `\YOzaz\LaravelSwiftmailer\Mailer` class - `resetSwiftTransport()` does the trick. Or follow any other solutions which basicaly execute stop() function after every email being sent.
+
 ## What about Laravel 5?
 
 Package supports only Laravel 4 only at the moment. However, if you have spare time to adopt it (shouldn't be difficult) - feel free to create a pull request.
