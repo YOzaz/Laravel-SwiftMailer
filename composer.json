@@ -1,0 +1,22 @@
+{
+    "name": "yozaz/laravel-swiftmailer",
+    "description": "Laravel and SwiftMailer integration fix for Queued deamon workers",
+    "keywords": ["laravel", "swiftmailer", "mail", "queue", "beanstalkd"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Marijus Planciunas",
+            "email": "yozaz.mandac@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "4.2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "YOzaz\\LaravelSwiftmailer\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
