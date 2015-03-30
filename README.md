@@ -1,4 +1,4 @@
-# Laravel 4 and SwiftMailer integrator
+# Laravel 4 and Swift Mailer integrator
 
 Package, which tries to solve long-term daemon worker issue.
 For reference:
@@ -37,6 +37,10 @@ However, real magic starts when emails are sent through [Beanstalkd](https://git
 ## What about Laravel 5?
 
 Package supports only Laravel 4 only at the moment. However, if you have spare time to adopt it (shouldn't be difficult) - feel free to create a pull request.
+
+## Credits
+
+All credits go to [xdecock](https://github.com/xdecock), author of [Swift Mailer](https://github.com/xdecock/swiftmailer), for providing ready-made solution implemented in this package.
 
 ## License
 
