@@ -11,7 +11,9 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "illuminate/support": "4.2.*"
+        "illuminate/support": "4.2.*",
+		"illuminate/mail": "4.2.*",
+		"swiftmailer/swiftmailer": "~5.1"
     },
     "autoload": {
         "psr-4": {

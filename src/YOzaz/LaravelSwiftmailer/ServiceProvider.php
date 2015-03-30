@@ -28,7 +28,10 @@ class ServiceProvider extends BaseServiceProvider {
 	 */
 	public function register()
 	{
-		//
+		$this->app->bindShared('laravel-swiftmailer.mailer', function($app)
+		{
+			return new Mailer( $app->make('mailer') );
+		} );
 	}
 
 	/**
@@ -38,7 +41,7 @@ class ServiceProvider extends BaseServiceProvider {
 	 */
 	public function provides()
 	{
-		return array('mailer');
+		return ['laravel-swiftmailer.mailer'];
 	}
 
 }
