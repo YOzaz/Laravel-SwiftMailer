@@ -50,7 +50,7 @@ Nothing needs to be changed.
 
 ### If you're using IoC binding
 
-Just initialize `\YOzaz\LaravelSwiftmailer\Mailer`. Optionaly you can pass instance of `\Illuminate\Mail\Mailer` to constructor, or set it later on regarding your needs:
+New IoC binding can be accessed in following way.
 
 ```php
 var $mailer = App::make('laravel-swiftmailer.mailer');
@@ -58,7 +58,7 @@ var $mailer = App::make('laravel-swiftmailer.mailer');
 
 ### If you're instantiating Mailer object manually
 
-After instantiating `\Illuminate\Mail\Mailer`, you need to instantiate `\YOzaz\LaravelSwiftmailer\Mailer` and pass it to constructor:
+Just initialize `\YOzaz\LaravelSwiftmailer\Mailer`. Optionaly you can pass instance of `\Illuminate\Mail\Mailer` to constructor, or set it later on regarding your needs:
 
 ```php
 // automatic resolving
