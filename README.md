@@ -10,21 +10,29 @@ For reference:
 
 Begin by installing this package through Composer. Edit your project's `composer.json` file to require `yozaz/laravel-swiftmailer`.
 
-	"require": {
-		"yozaz/laravel-swiftmailer": "1.*"
-	}
+```json
+"require": {
+	"yozaz/laravel-swiftmailer": "1.*"
+}
+```
 
 Next, update Composer from the Terminal:
 
-	composer update
+```bash
+composer update
+```
 
 Once this operation completes, the next step is to add the service provider. Open `app/config/app.php`, and add a new item to the providers array.
 
-	'YOzaz\LaravelSwiftmailer\ServiceProvider',
+```php
+'YOzaz\LaravelSwiftmailer\ServiceProvider',
+```
 
 The final step is to replace Laravel's native Mailer Facade with the one, provided in a package. Open `app/config/app.php`, and replace "Mail" alias with:
 
-	'Mail' => 'YOzaz\LaravelSwiftmailer\Facade',
+```php
+'Mail' => 'YOzaz\LaravelSwiftmailer\Facade',
+```
 
 That's it! You're all set to go.
 
