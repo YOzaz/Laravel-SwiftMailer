@@ -12,7 +12,7 @@ Begin by installing this package through Composer. Edit your project's `composer
 
 ```json
 "require": {
-	"yozaz/laravel-swiftmailer": "1.*"
+	"yozaz/laravel-swiftmailer": "~0.1.*"
 }
 ```
 
