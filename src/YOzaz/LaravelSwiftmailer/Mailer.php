@@ -19,9 +19,28 @@ class Mailer {
 	 * @param \Illuminate\Mail\Mailer $mailer
 	 * @return Mailer
 	 */
-	public function __construct( BaseMailer $mailer )
+	public function __construct( BaseMailer $mailer = null )
+	{
+		// dirty check if we're in Laravel
+		if ( !isset($mailer) && function_exists('app') )
+		{
+			$mailer = app('mailer');
+		}
+
+		$this->mailer = $mailer ?: null;
+	}
+
+	/**
+	 * Sets custom mailer
+	 *
+	 * @param \Illuminate\Mail\Mailer $mailer
+	 * @return Mailer
+	 */
+	public function setMailer( BaseMailer $mailer )
 	{
 		$this->mailer = $mailer;
+
+		return $this;
 	}
 
 	/**
