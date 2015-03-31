@@ -97,7 +97,6 @@ var $mailer = new \YOzaz\LaravelSwiftmailer\Mailer( $my_custom_mailer, false );
 To set custom mailer instance, call this method:
 
 ```php
-// disable auto reset
 Mailer::setMailer( $my_custom_mailer );
 ```
 
