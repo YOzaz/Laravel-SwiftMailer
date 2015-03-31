@@ -12,7 +12,7 @@ Begin by installing this package through Composer. Edit your project's `composer
 
 ```json
 "require": {
-	"yozaz/laravel-swiftmailer": "~1.0"
+	"yozaz/laravel-swiftmailer": "~3.0"
 }
 ```
 
@@ -58,7 +58,7 @@ Mailer::disableAutoReset();
 Mailer::enableAutoReset();
 // Set my status
 Mailer::setAutoReset(true);
-// check if auto-reset is anabled
+// check if auto-reset is enabled
 if ( Mailer::autoResetEnabled() ) { ...
 ```
 
