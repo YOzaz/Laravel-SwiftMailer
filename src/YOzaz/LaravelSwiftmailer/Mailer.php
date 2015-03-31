@@ -127,6 +127,11 @@ class Mailer {
 	 */
 	protected function resetSwiftTransport()
 	{
+		if ( $this->mailer && method_exists( $this->mailer, 'isPretending' ) && $this->mailer->isPretending() )
+		{
+			return;
+		}
+
 		if ( ! $transport = $this->getSwiftMailerTransport())
 		{
 			return;
