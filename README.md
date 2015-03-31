@@ -36,54 +36,68 @@ The final step is to replace Laravel's native Mailer Facade with the one, provid
 
 That's it! You're all set to go.
 
+## About
+
+Package makes error-safe calls to SwiftMailer transport reset functions before email is being sent. In case reset fails - SMTP connection is restarted, thus maintaining it active for whole application living cycle.
+This is extremely important for long-living applications. E.g. when emails are sent through [Beanstalkd](https://github.com/kr/beanstalkd) + [Supervisor](http://supervisord.org/) + [Laravel Queue Daemon Worker](http://laravel.com/docs/4.2/queues#daemon-queue-worker) architecture, Laravel application never quits - therefore SMTP connection is kept active and timeouts after some time. Resetting and/or restarting SMTP connection automaticaly solves this problem in general.
+
+**N.B.** While auto-reset feature is great, sometimes it's not a preferred behaviour. Be sure to check your SMTP server configuration before using this package.
+
 ## Usage
 
 Package is built in a way, that nothing special needs to be done. It's basically a wrapper, so all `Mailer::send()` and similar functions will work out of the box.
 
-However, real magic starts when emails are sent through [Beanstalkd](https://github.com/kr/beanstalkd) + [Supervisor](http://supervisord.org/) + [Laravel Queue Daemon Worker](http://laravel.com/docs/4.2/queues#daemon-queue-worker) (as an example) architecture. To maintain stable connection, package makes safe-error calls to SwiftMailer transport reset functions before email is being sent. 
+### Auto-reset
 
-**N.B.** This package _does not_ overwrite 'mailer' IoC binding in Laravel for legacy purposes.
+Package resets SMTP adapter every time when email is sent (except first call, before SMTP transport is started). You can manipulate this through special helper functions:
 
-### If you're using Facaders
+```php
+// disable auto reset
+Mailer::disableAutoReset();
+// enable it back
+Mailer::enableAutoReset();
+// Set my status
+Mailer::setAutoReset(true);
+// check if auto-reset is anabled
+if ( Mailer::autoResetEnabled() ) { ...
+```
 
-Nothing needs to be changed.
+It is possible to reset SMTP adapter explicitly.
 
-### If you're using IoC binding
+```php
+Mailer::reset()->send(...);
+```
 
-New IoC binding can be accessed in following way.
+### Initialization
+
+Package has separate IoC binding. **N.B.** This package _does not_ overwrite 'mailer' IoC binding in Laravel for legacy purposes.
 
 ```php
 var $mailer = App::make('laravel-swiftmailer.mailer');
 ```
 
-### If you're instantiating Mailer object manually
-
-Just initialize `\YOzaz\LaravelSwiftmailer\Mailer`. Optionaly you can pass instance of `\Illuminate\Mail\Mailer` to constructor, or set it later on regarding your needs:
+If you prefer object initialization against Facades, you can instantiate `Mailer` class by yourself, with additional parameters if required. Package will try to instantiate required objects automatically as defaults.
 
 ```php
-// automatic resolving
-var $mailer_auto = new \YOzaz\LaravelSwiftmailer\Mailer();
-// Explicit instance
-var $mailer_explicit = new \YOzaz\LaravelSwiftmailer\Mailer( App::make('mailer') );
-// Custom instance
-var $mailer_custom = new \YOzaz\LaravelSwiftmailer\Mailer();
-$mailer_custom->setMailer( App::make('mailer') );
-// Shorter syntax for above
-var $mailer_custom = Mailer::setMailer( App::make('mailer') );
+var $mailer = new \YOzaz\LaravelSwiftmailer\Mailer();
 ```
 
-### If you're initializing Swift_Mailer manually
+Optinally, if you have custom wrapper for Laravel's Mailer, or want to manipulate with auto-reset functionality, you can pass additional parameters to IoC binding or class instantiation. Take a look at class constructor for details.
 
-Well, then this package is not really required for you. Just follow approach in `\YOzaz\LaravelSwiftmailer\Mailer` class - `resetSwiftTransport()` does the trick. Or follow any other solutions which basicaly execute stop() function after every email being sent.
+```php
+var $my_custom_mailer = App::make('mailer');
+// pass custom mailer and disable auto-reset
+var $mailer = new \YOzaz\LaravelSwiftmailer\Mailer( $my_custom_mailer, false );
+```
 
-## What about Laravel 5?
+### Setting custom mailer instance
 
-Package supports only Laravel 4 only at the moment. However, if you have spare time to adopt it (shouldn't be difficult) - feel free to create a pull request.
+To set custom mailer instance, call this method:
 
-## @todo
-
-* Package may throw an error, if "pretending" flag is set.
-* ok ok. Laravel 5 support.
+```php
+// disable auto reset
+Mailer::setMailer( $my_custom_mailer );
+```
 
 ## Credits
 
