@@ -19,7 +19,7 @@ class Mailer {
 	protected $auto_reset;
 
 	const AUTO_RESET_ENABLED = true;
-	const AUTO_RESET_DISABLED = true;
+	const AUTO_RESET_DISABLED = false;
 
 	/**
 	 * Create a new Mailer instance.

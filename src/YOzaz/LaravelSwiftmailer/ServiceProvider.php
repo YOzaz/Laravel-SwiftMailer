@@ -28,7 +28,7 @@ class ServiceProvider extends BaseServiceProvider {
 	 */
 	public function register()
 	{
-		$this->app->bindShared('laravel-swiftmailer.mailer', function($app)
+		$this->app->singleton('laravel-swiftmailer.mailer', function($app)
 		{
 			return new Mailer( $app->make('mailer') );
 		} );
