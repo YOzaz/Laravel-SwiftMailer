@@ -24,13 +24,13 @@ Next, update Composer from the Terminal:
 composer update
 ```
 
-Once this operation completes, the next step is to add the service provider. Open `app/config/app.php`, and add a new item to the providers array.
+Once this operation completes, the next step is to add the service provider. Open `app/config/app.php` (or `config/app.php`), and add a new item to the providers array.
 
 ```php
 'YOzaz\LaravelSwiftmailer\ServiceProvider',
 ```
 
-The final step is to replace Laravel's native Mailer Facade with the one, provided in a package. Open `app/config/app.php`, and replace "Mail" alias with:
+The final step is to replace Laravel's native Mailer Facade with the one, provided in a package. Open `app/config/app.php` (or `config/app.php`), and replace "Mail" alias with:
 
 ```php
 'Mail' => 'YOzaz\LaravelSwiftmailer\Facade',
