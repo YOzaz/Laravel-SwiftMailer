@@ -1,5 +1,9 @@
 # Laravel and Swift Mailer integrator
 
+[![Latest Stable Version](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/v/stable.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
+[![Total Downloads](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/downloads.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
+[![License](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/license.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
+
 Package, which tries to solve long-term daemon worker issue.
 For reference:
 
