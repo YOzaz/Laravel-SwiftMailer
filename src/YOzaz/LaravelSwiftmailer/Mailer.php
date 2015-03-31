@@ -1,8 +1,6 @@
 <?php namespace YOzaz\LaravelSwiftmailer;
 
 use Exception;
-use Swift_Transport_AbstractSmtpTransport;
-use Illuminate\Mail\Mailer as BaseMailer;
 
 class Mailer {
 
@@ -14,29 +12,40 @@ class Mailer {
 	protected $mailer;
 
 	/**
-	 * Create a new SwiftMailer instance.
+	 * Flag if auto-reset is enabled
 	 *
-	 * @param \Illuminate\Mail\Mailer $mailer
-	 * @return Mailer
+	 * @var boolean
 	 */
-	public function __construct( BaseMailer $mailer = null )
+	protected $auto_reset;
+
+	const AUTO_RESET_ENABLED = true;
+	const AUTO_RESET_DISABLED = true;
+
+	/**
+	 * Create a new Mailer instance.
+	 *
+	 * @param object $mailer
+	 * @param bool $enable_auto_reset
+	 */
+	public function __construct( $mailer = null, $enable_auto_reset = self::AUTO_RESET_ENABLED )
 	{
 		// dirty check if we're in Laravel
-		if ( !isset($mailer) && function_exists('app') )
+		if ( ! $mailer && function_exists('app') )
 		{
 			$mailer = app('mailer');
 		}
 
-		$this->mailer = $mailer ?: null;
+		$this->setMailer( $mailer );
+		$this->setAutoReset( $enable_auto_reset );
 	}
 
 	/**
 	 * Sets custom mailer
 	 *
-	 * @param \Illuminate\Mail\Mailer $mailer
+	 * @param object $mailer
 	 * @return Mailer
 	 */
-	public function setMailer( BaseMailer $mailer )
+	public function setMailer( $mailer )
 	{
 		$this->mailer = $mailer;
 
@@ -44,13 +53,71 @@ class Mailer {
 	}
 
 	/**
+	 * Sets flag for auto reset
+	 *
+	 * @param bool $status
+	 * @return Mailer
+	 */
+	protected function setAutoReset( $status )
+	{
+		$this->auto_reset = $status;
+
+		return $this;
+	}
+
+	/**
+	 * Enables auto reset
+	 *
+	 * @return Mailer
+	 */
+	public function enableAutoReset()
+	{
+		return $this->setAutoReset( self::AUTO_RESET_ENABLED );
+	}
+
+	/**
+	 * Enables auto reset
+	 *
+	 * @return Mailer
+	 */
+	public function disableAutoReset()
+	{
+		return $this->setAutoReset( self::AUTO_RESET_DISABLED );
+	}
+
+	/**
+	 * Enables auto reset
+	 *
+	 * @return Mailer
+	 */
+	public function autoResetEnabled()
+	{
+		return $this->auto_reset === self::AUTO_RESET_ENABLED;
+	}
+
+	/**
 	 * Get the Swift Mailer Transport instance.
 	 *
-	 * @return \Swift_Transport
+	 * @return \Swift_Transport|null
 	 */
 	protected function getSwiftMailerTransport()
 	{
-		return $this->mailer->getSwiftMailer()->getTransport();
+		if ( ! $mailer = $this->mailer )
+		{
+			return null;
+		}
+
+		if ( ! $swift_mailer = $mailer->getSwiftMailer() )
+		{
+			return null;
+		}
+
+		if ( ! is_a( $swift_mailer, '\Swift_Mailer' ) )
+		{
+			return null;
+		}
+
+		return $swift_mailer->getTransport();
 	}
 
 	/**
@@ -65,17 +132,26 @@ class Mailer {
 			return;
 		}
 
+		if ( ! is_a( $transport, '\Swift_Transport_AbstractSmtpTransport' ) )
+		{
+			return;
+		}
+
+		if ( ! $transport->isStarted() )
+		{
+			$transport->start();
+
+			return;
+		}
+
 		try
 		{
 			// Send RESET to restart the SMTP status and check if it's ready for running
-			if ($transport instanceof Swift_Transport_AbstractSmtpTransport)
-			{
-				$transport->reset();
-			}
+			$transport->reset();
 		}
 		catch (Exception $e)
 		{
-			// In case of failure - let's try to restart it
+			// In case of failure - let's try to stop it
 			try
 			{
 				$transport->stop();
@@ -90,6 +166,18 @@ class Mailer {
 	}
 
 	/**
+	 * Manual reset for SMTP adapter
+	 *
+	 * @return Mailer
+	 */
+	public function reset()
+	{
+		$this->resetSwiftTransport();
+
+		return $this;
+	}
+
+	/**
 	 * Send a new message using a view.
 	 *
 	 * @param  string|array  $view
@@ -99,7 +187,10 @@ class Mailer {
 	 */
 	public function send($view, array $data, $callback)
 	{
-		$this->resetSwiftTransport();
+		if ( $this->autoResetEnabled() )
+		{
+			$this->resetSwiftTransport();
+		}
 
 		return $this->mailer->send($view, $data, $callback);
 	}
