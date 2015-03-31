@@ -1,10 +1,12 @@
-# Laravel 4 and Swift Mailer integrator
+# Laravel and Swift Mailer integrator
 
 Package, which tries to solve long-term daemon worker issue.
 For reference:
 
 * [swiftmailer/swiftmailer#490](https://github.com/swiftmailer/swiftmailer/issues/490)
 * [laravel/framework#4573](https://github.com/laravel/framework/issues/4573)
+
+Package is compatible with Laravel 4th and 5th versions.
 
 ## Installation
 
