@@ -20,7 +20,7 @@ class ServiceProvider extends BaseServiceProvider {
 	{
 		$app = $this->app;
 
-		if ( version_compare( $app::VERSION, '5.0.0', '<' ) )
+		if ( version_compare( $app::VERSION, '5.0', '<' ) )
 		{
 			$this->package('yozaz/laravel-swiftmailer');
 		}
