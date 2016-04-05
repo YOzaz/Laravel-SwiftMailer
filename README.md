@@ -104,6 +104,10 @@ To set custom mailer instance, call this method:
 Mailer::setMailer( $my_custom_mailer );
 ```
 
+## Known Issues
+
+Package doesn't intercept `Mail::queue` and similar queue methods. See [this issue](https://github.com/YOzaz/Laravel-SwiftMailer/issues/3) for details.
+
 ## Credits
 
 All credits go to [xdecock](https://github.com/xdecock), author of [Swift Mailer](https://github.com/xdecock/swiftmailer), for providing ready-made solution implemented in this package.
