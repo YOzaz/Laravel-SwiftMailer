@@ -1,8 +1,18 @@
-# Laravel and Swift Mailer integrator
+# Laravel and Swift Mailer integrator [deprecated]
 
 [![Latest Stable Version](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/v/stable.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
 [![Total Downloads](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/downloads.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
 [![License](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/license.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
+
+## Deprecated
+
+This package is deprecated, as starting from Laravel 5.0 and above, original Mail class automatically reconnects on every message. See commit here: [Force reconnection to fix mailing on daemon queues] (https://github.com/laravel/framework/commit/af8eb1face000f82e5c85e6eb822075fc313cbb9).
+
+It can still be be used for Laravel 4.2. Actually, it won't do any harm on Laravel 5 as well, but will be pointless.
+
+Original docs below.
+
+---
 
 Package, which tries to solve long-term daemon worker issue.
 For reference:
@@ -10,7 +20,7 @@ For reference:
 * [swiftmailer/swiftmailer#490](https://github.com/swiftmailer/swiftmailer/issues/490)
 * [laravel/framework#4573](https://github.com/laravel/framework/issues/4573)
 
-Package is compatible with Laravel 4th and 5th versions.
+Compatible with Laravel 4th and 5th versions.
 
 ## Installation
 
@@ -103,10 +113,6 @@ To set custom mailer instance, call this method:
 ```php
 Mailer::setMailer( $my_custom_mailer );
 ```
-
-## Known Issues
-
-Package doesn't intercept `Mail::queue` and similar queue methods. See [this issue](https://github.com/YOzaz/Laravel-SwiftMailer/issues/3) for details.
 
 ## Credits
 
