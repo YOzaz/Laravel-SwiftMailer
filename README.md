@@ -121,3 +121,7 @@ All credits go to [xdecock](https://github.com/xdecock), author of [Swift Mailer
 ## License
 
 Laravel-SwiftMailer package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/YOzaz/laravel-swiftmailer/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
