@@ -1,6 +1,8 @@
 <?php namespace YOzaz\LaravelSwiftmailer;
 
+use Closure;
 use Exception;
+use Illuminate\Support\Str;
 
 class Mailer {
 
@@ -183,25 +185,147 @@ class Mailer {
 	}
 
 	/**
-	 * Send a new message using a view.
+	 * Build the callable for a queued e-mail job.
 	 *
+	 * @param  mixed  $callback
+	 * @return mixed
+	 */
+	protected function buildQueueCallable($callback)
+	{
+		if ( !$callback instanceof Closure )
+		{
+			return $callback;
+		}
+
+		if ( class_exists('\SuperClosure\Serializer') )
+		{
+			return (new \SuperClosure\Serializer)->serialize($callback);
+		}
+		else
+		{
+			return serialize(new \Illuminate\Support\SerializableClosure($callback));
+		}
+	}
+
+	/**
+	 * Get the true callable for a queued e-mail message.
+	 *
+	 * @param  array  $data
+	 * @return mixed
+	 */
+	protected function getQueuedCallable(array $data)
+	{
+
+		if (Str::contains($data['callback'], 'SerializableClosure'))
+		{
+			if ( class_exists('\SuperClosure\Serializer') )
+			{
+				return (new \SuperClosure\Serializer)->unserialize($data['callback']);
+			}
+			else
+			{
+				return with(unserialize($data['callback']))->getClosure();
+			}
+		}
+
+		return $data['callback'];
+	}
+
+	/**
+	 * Queue a new e-mail message for sending.
+	 *
+	 * @param  string|array  $view
+	 * @param  array   $data
+	 * @param  \Closure|string  $callback
+	 * @param  string  $queue
+	 * @return mixed
+	 */
+	public function queue($view, array $data, $callback, $queue = null)
+	{
+		$callback = $this->buildQueueCallable($callback);
+
+		return $this->mailer->queue->push('laravel-swiftmailer.mailer@handleQueuedMessage', compact('view', 'data', 'callback'), $queue);
+	}
+
+	/**
+	 * Queue a new e-mail message for sending on the given queue.
+	 *
+	 * @param  string  $queue
 	 * @param  string|array  $view
 	 * @param  array  $data
 	 * @param  \Closure|string  $callback
 	 * @return mixed
 	 */
-	public function send($view, array $data, $callback)
+	public function onQueue($queue, $view, array $data, $callback)
 	{
-		if ( $this->autoResetEnabled() )
-		{
-			$this->resetSwiftTransport();
-		}
+		return $this->queue($view, $data, $callback, $queue);
+	}
 
-		return $this->mailer->send($view, $data, $callback);
+	/**
+	 * Queue a new e-mail message for sending on the given queue.
+	 *
+	 * This method didn't match rest of framework's "onQueue" phrasing. Added "onQueue".
+	 *
+	 * @param  string  $queue
+	 * @param  string|array  $view
+	 * @param  array  $data
+	 * @param  \Closure|string  $callback
+	 * @return mixed
+	 */
+	public function queueOn($queue, $view, array $data, $callback)
+	{
+		return $this->onQueue($queue, $view, $data, $callback);
+	}
+
+	/**
+	 * Queue a new e-mail message for sending after (n) seconds.
+	 *
+	 * @param  int  $delay
+	 * @param  string|array  $view
+	 * @param  array  $data
+	 * @param  \Closure|string  $callback
+	 * @param  string  $queue
+	 * @return mixed
+	 */
+	public function later($delay, $view, array $data, $callback, $queue = null)
+	{
+		$callback = $this->buildQueueCallable($callback);
+
+		return $this->mailer->queue->later($delay, 'laravel-swiftmailer.mailer@handleQueuedMessage', compact('view', 'data', 'callback'), $queue);
+	}
+
+	/**
+	 * Queue a new e-mail message for sending after (n) seconds on the given queue.
+	 *
+	 * @param  string  $queue
+	 * @param  int  $delay
+	 * @param  string|array  $view
+	 * @param  array  $data
+	 * @param  \Closure|string  $callback
+	 * @return mixed
+	 */
+	public function laterOn($queue, $delay, $view, array $data, $callback)
+	{
+		return $this->later($delay, $view, $data, $callback, $queue);
+	}
+
+	/**
+	 * Handle a queued e-mail message job.
+	 *
+	 * @param  \Illuminate\Queue\Jobs\Job  $job
+	 * @param  array  $data
+	 * @return void
+	 */
+	public function handleQueuedMessage($job, $data)
+	{
+		$this->send($data['view'], $data['data'], $this->getQueuedCallable($data));
+
+		$job->delete();
 	}
 
 	/**
 	 * In case we are accessing Mailer specific functions, we can pass it to parent class to take care of
+	 * Sending methods will be intercepted and transport will be reset if required
 	 *
 	 * @param $method
 	 * @param array $args
@@ -209,6 +333,17 @@ class Mailer {
 	 */
 	public function __call( $method, array $args )
 	{
+		$intercepted_methods = array(
+			'raw',
+			'plain',
+			'send',
+		);
+
+		if ( $this->autoResetEnabled() && in_array($method, $intercepted_methods) )
+		{
+			$this->resetSwiftTransport();
+		}
+
 		return call_user_func_array( [$this->mailer, $method], $args );
 	}
 }
