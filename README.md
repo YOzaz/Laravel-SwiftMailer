@@ -1,16 +1,15 @@
-# Laravel and Swift Mailer integrator [deprecated]
+# Laravel and Swift Mailer integrator
 
 [![Latest Stable Version](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/v/stable.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
 [![Total Downloads](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/downloads.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
 [![License](https://poser.pugx.org/YOzaz/Laravel-SwiftMailer/license.svg)](https://packagist.org/packages/yozaz/laravel-swiftmailer)
 
-## Deprecated
+## WAS Deprecated...
 
-This package is deprecated, as starting from Laravel 5.0 and above, original Mail class automatically reconnects on every message. See commit here: [Force reconnection to fix mailing on daemon queues] (https://github.com/laravel/framework/commit/af8eb1face000f82e5c85e6eb822075fc313cbb9).
+This package was deprecated, as starting from Laravel 5.0 and above, original Mail class automatically theoretically reconnects on every message. See commit here: [Force reconnection to fix mailing on daemon queues] (https://github.com/laravel/framework/commit/af8eb1face000f82e5c85e6eb822075fc313cbb9).
 
-It can still be be used for Laravel 4.2. Actually, it won't do any harm on Laravel 5 as well, but will be pointless.
-
-Original docs below.
+However, it looks like just calling `stop` on a transport doesn't do full reset, therefore may throw an error - see discussion here:
+https://github.com/laravel/framework/issues/4573#issuecomment-211889196
 
 ---
 
