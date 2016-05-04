@@ -62,7 +62,7 @@ class Mailer {
 	}
 
 	/**
-	 * Sets custom mailer
+	 * Assigns Queue manager instance
 	 *
 	 * @param \Illuminate\Queue\QueueManager $queue
 	 * @return Mailer
