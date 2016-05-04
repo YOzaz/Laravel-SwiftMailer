@@ -12,15 +12,20 @@ class ServiceProvider extends BaseServiceProvider {
 	protected $defer = false;
 
 	/**
+	 * Flag if this is Laravel 5 instance
+	 *
+	 * @var bool
+	 */
+	protected $is_laravel_5 = true;
+
+	/**
 	 * Bootstrap the application events.
 	 *
 	 * @return void
 	 */
 	public function boot()
 	{
-		$app = $this->app;
-
-		if ( version_compare( $app::VERSION, '5.0', '<' ) )
+		if ( !$this->is_laravel_5 )
 		{
 			$this->package('yozaz/laravel-swiftmailer');
 		}
@@ -33,13 +38,22 @@ class ServiceProvider extends BaseServiceProvider {
 	 */
 	public function register()
 	{
+		$app = $this->app ?: app();
+		$app_version = method_exists($app, 'version') ? $app->version() : $app::VERSION;
+
+		if ( version_compare( $app_version, '5.0', '<' ) )
+		{
+			$this->is_laravel_5 = false;
+		}
+
 		$this->app->singleton('laravel-swiftmailer.mailer', function($app)
 		{
+			/** @var \Illuminate\Foundation\Application $app */
 			$mailer = new Mailer( $app->make('mailer') );
 
 			if ( $app->bound('queue') )
 			{
-				$mailer->setQueue($app['queue']);
+				$this->is_laravel_5 ? $mailer->setQueue($app['queue.connection']) : $mailer->setQueue($app['queue']);
 			}
 
 			return $mailer;
