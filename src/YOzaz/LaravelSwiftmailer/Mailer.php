@@ -14,6 +14,13 @@ class Mailer {
 	protected $mailer;
 
 	/**
+	 * Original QueueManager instance.
+	 *
+	 * @var \Illuminate\Queue\QueueManager
+	 */
+	protected $queue;
+
+	/**
 	 * Flag if auto-reset is enabled
 	 *
 	 * @var boolean
@@ -50,6 +57,24 @@ class Mailer {
 	public function setMailer( $mailer )
 	{
 		$this->mailer = $mailer;
+
+		return $this;
+	}
+
+	/**
+	 * Sets custom mailer
+	 *
+	 * @param \Illuminate\Queue\QueueManager $queue
+	 * @return Mailer
+	 */
+	public function setQueue( $queue )
+	{
+		$this->queue = $queue;
+
+		if ( $this->mailer )
+		{
+			$this->mailer->setQueue( $queue );
+		}
 
 		return $this;
 	}
@@ -244,7 +269,7 @@ class Mailer {
 	{
 		$callback = $this->buildQueueCallable($callback);
 
-		return $this->mailer->queue->push('laravel-swiftmailer.mailer@handleQueuedMessage', compact('view', 'data', 'callback'), $queue);
+		return $this->queue->push('laravel-swiftmailer.mailer@handleQueuedMessage', compact('view', 'data', 'callback'), $queue);
 	}
 
 	/**
@@ -291,7 +316,7 @@ class Mailer {
 	{
 		$callback = $this->buildQueueCallable($callback);
 
-		return $this->mailer->queue->later($delay, 'laravel-swiftmailer.mailer@handleQueuedMessage', compact('view', 'data', 'callback'), $queue);
+		return $this->queue->later($delay, 'laravel-swiftmailer.mailer@handleQueuedMessage', compact('view', 'data', 'callback'), $queue);
 	}
 
 	/**

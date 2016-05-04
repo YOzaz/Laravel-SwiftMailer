@@ -35,7 +35,14 @@ class ServiceProvider extends BaseServiceProvider {
 	{
 		$this->app->singleton('laravel-swiftmailer.mailer', function($app)
 		{
-			return new Mailer( $app->make('mailer') );
+			$mailer = new Mailer( $app->make('mailer') );
+
+			if ( $app->bound('queue') )
+			{
+				$mailer->setQueue($app['queue']);
+			}
+
+			return $mailer;
 		} );
 	}
 
