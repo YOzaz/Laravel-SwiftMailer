@@ -31,27 +31,44 @@ class Mailer {
 	const AUTO_RESET_DISABLED = false;
 
 	/**
+	 * Type of auto-reset behaviour
+	 *
+	 * @var boolean
+	 */
+	protected $reset_mode;
+
+	const AUTO_RESET_MODE_RESET = 1000;
+	const AUTO_RESET_MODE_STOP = 2000;
+	const AUTO_RESET_MODE_BOTH = 5000;
+
+	/**
 	 * Create a new Mailer instance.
 	 *
 	 * @param object $mailer
 	 * @param bool $enable_auto_reset
+	 * @param int $auto_reset_mode
 	 */
-	public function __construct( $mailer = null, $enable_auto_reset = self::AUTO_RESET_ENABLED )
+	public function __construct(
+		$mailer = null,
+		$enable_auto_reset = self::AUTO_RESET_ENABLED,
+		$auto_reset_mode = self::AUTO_RESET_MODE_STOP )
 	{
 		// dirty check if we're in Laravel
-		if ( ! $mailer && function_exists('app') )
+		if ( !$mailer && function_exists('app') )
 		{
 			$mailer = app('mailer');
 		}
 
 		$this->setMailer( $mailer );
 		$this->setAutoReset( $enable_auto_reset );
+		$this->setMode( $auto_reset_mode );
 	}
 
 	/**
 	 * Sets custom mailer
 	 *
 	 * @param object $mailer
+	 *
 	 * @return Mailer
 	 */
 	public function setMailer( $mailer )
@@ -65,6 +82,7 @@ class Mailer {
 	 * Assigns Queue manager instance
 	 *
 	 * @param \Illuminate\Queue\QueueManager $queue
+	 *
 	 * @return Mailer
 	 */
 	public function setQueue( $queue )
@@ -83,6 +101,7 @@ class Mailer {
 	 * Sets flag for auto reset
 	 *
 	 * @param bool $status
+	 *
 	 * @return Mailer
 	 */
 	protected function setAutoReset( $status )
@@ -115,11 +134,42 @@ class Mailer {
 	/**
 	 * Enables auto reset
 	 *
-	 * @return Mailer
+	 * @return bool
 	 */
 	public function autoResetEnabled()
 	{
 		return $this->auto_reset === self::AUTO_RESET_ENABLED;
+	}
+
+	/**
+	 * Sets auto reset mode
+	 *
+	 * @param int $mode
+	 *
+	 * @return Mailer
+	 */
+	public function setMode( $mode )
+	{
+		$this->reset_mode = $mode;
+
+		return $this;
+	}
+
+	/**
+	 * Checks auto reset mode
+	 *
+	 * @param int|array $mode
+	 *
+	 * @return boolean
+	 */
+	public function inMode( $mode )
+	{
+		if ( !is_array($mode) )
+		{
+			$mode = func_get_args();
+		}
+
+		return in_array( $this->reset_mode, $mode );
 	}
 
 	/**
@@ -129,17 +179,17 @@ class Mailer {
 	 */
 	protected function getSwiftMailerTransport()
 	{
-		if ( ! $mailer = $this->mailer )
+		if ( !$mailer = $this->mailer )
 		{
 			return null;
 		}
 
-		if ( ! $swift_mailer = $mailer->getSwiftMailer() )
+		if ( !$swift_mailer = $mailer->getSwiftMailer() )
 		{
 			return null;
 		}
 
-		if ( ! is_a( $swift_mailer, '\Swift_Mailer' ) )
+		if ( !is_a( $swift_mailer, '\Swift_Mailer' ) )
 		{
 			return null;
 		}
@@ -154,22 +204,12 @@ class Mailer {
 	 */
 	protected function resetSwiftTransport()
 	{
-		if ( $this->mailer && method_exists( $this->mailer, 'isPretending' ) && $this->mailer->isPretending() )
+		if ( !$transport = $this->queryTransport() )
 		{
 			return;
 		}
 
-		if ( ! $transport = $this->getSwiftMailerTransport())
-		{
-			return;
-		}
-
-		if ( ! is_a( $transport, '\Swift_Transport_AbstractSmtpTransport' ) )
-		{
-			return;
-		}
-
-		if ( ! $transport->isStarted() )
+		if ( !$transport->isStarted() )
 		{
 			$transport->start();
 
@@ -184,17 +224,61 @@ class Mailer {
 		catch (Exception $e)
 		{
 			// In case of failure - let's try to stop it
-			try
-			{
-				$transport->stop();
-			}
-			catch (Exception $e)
-			{
-				// Just start it then...
-			}
+			$this->stopSwiftTransport();
 
 			$transport->start();
 		}
+	}
+
+	/**
+	 * Stop Swift Mailer SMTP transport adapter
+	 *
+	 * @return void
+	 */
+	protected function stopSwiftTransport()
+	{
+		if ( !$transport = $this->queryTransport() )
+		{
+			return;
+		}
+
+		if ( !$transport->isStarted() )
+		{
+			// Not running - no reason for stopping it
+			return;
+		}
+
+		try
+		{
+			// Send STOP to stop the SMTP connection
+			$transport->stop();
+		}
+		catch (Exception $e)
+		{
+			// In case of failure - do nothing
+		}
+	}
+
+	/**
+	 * Query correct transport object
+	 *
+	 * @return \Swift_Transport|null
+	 */
+	protected function queryTransport()
+	{
+		if ( $this->mailer && method_exists( $this->mailer, 'isPretending' ) && $this->mailer->isPretending() )
+		{
+			return null;
+		}
+
+		$transport = $this->getSwiftMailerTransport();
+
+		if ( !$transport || !is_a( $transport, '\Swift_Transport_AbstractSmtpTransport' ) )
+		{
+			return null;
+		}
+
+		return $transport;
 	}
 
 	/**
@@ -205,6 +289,18 @@ class Mailer {
 	public function reset()
 	{
 		$this->resetSwiftTransport();
+
+		return $this;
+	}
+
+	/**
+	 * Manual stop for SMTP adapter
+	 *
+	 * @return Mailer
+	 */
+	public function stop()
+	{
+		$this->stopSwiftTransport();
 
 		return $this;
 	}
@@ -236,6 +332,7 @@ class Mailer {
 	 * Get the true callable for a queued e-mail message.
 	 *
 	 * @param  array  $data
+	 *
 	 * @return mixed
 	 */
 	protected function getQueuedCallable(array $data)
@@ -263,6 +360,7 @@ class Mailer {
 	 * @param  array   $data
 	 * @param  \Closure|string  $callback
 	 * @param  string  $queue
+	 *
 	 * @return mixed
 	 */
 	public function queue($view, array $data, $callback, $queue = null)
@@ -279,6 +377,7 @@ class Mailer {
 	 * @param  string|array  $view
 	 * @param  array  $data
 	 * @param  \Closure|string  $callback
+	 *
 	 * @return mixed
 	 */
 	public function onQueue($queue, $view, array $data, $callback)
@@ -295,6 +394,7 @@ class Mailer {
 	 * @param  string|array  $view
 	 * @param  array  $data
 	 * @param  \Closure|string  $callback
+	 *
 	 * @return mixed
 	 */
 	public function queueOn($queue, $view, array $data, $callback)
@@ -310,6 +410,7 @@ class Mailer {
 	 * @param  array  $data
 	 * @param  \Closure|string  $callback
 	 * @param  string  $queue
+	 *
 	 * @return mixed
 	 */
 	public function later($delay, $view, array $data, $callback, $queue = null)
@@ -327,6 +428,7 @@ class Mailer {
 	 * @param  string|array  $view
 	 * @param  array  $data
 	 * @param  \Closure|string  $callback
+	 *
 	 * @return mixed
 	 */
 	public function laterOn($queue, $delay, $view, array $data, $callback)
@@ -339,6 +441,7 @@ class Mailer {
 	 *
 	 * @param  \Illuminate\Queue\Jobs\Job  $job
 	 * @param  array  $data
+	 *
 	 * @return void
 	 */
 	public function handleQueuedMessage($job, $data)
@@ -354,6 +457,7 @@ class Mailer {
 	 *
 	 * @param $method
 	 * @param array $args
+	 *
 	 * @return mixed
 	 */
 	public function __call( $method, array $args )
@@ -364,11 +468,26 @@ class Mailer {
 			'send',
 		);
 
-		if ( $this->autoResetEnabled() && in_array($method, $intercepted_methods) )
+		if (
+			$this->inMode( self::AUTO_RESET_MODE_RESET, self::AUTO_RESET_MODE_BOTH ) &&
+			$this->autoResetEnabled() &&
+			in_array($method, $intercepted_methods)
+		)
 		{
 			$this->resetSwiftTransport();
 		}
 
-		return call_user_func_array( [$this->mailer, $method], $args );
+		$result = call_user_func_array( [$this->mailer, $method], $args );
+
+		if (
+			$this->inMode( self::AUTO_RESET_MODE_STOP, self::AUTO_RESET_MODE_BOTH ) &&
+			$this->autoResetEnabled() &&
+			in_array($method, $intercepted_methods)
+		)
+		{
+			$this->stopSwiftTransport();
+		}
+
+		return $result;
 	}
 }
