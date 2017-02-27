@@ -27,7 +27,7 @@ Begin by installing this package through Composer. Edit your project's `composer
 
 ```json
 "require": {
-	"yozaz/laravel-swiftmailer": "~3.0"
+	"yozaz/laravel-swiftmailer": "~4.0"
 }
 ```
 
@@ -53,8 +53,8 @@ That's it! You're all set to go.
 
 ## About
 
-Package makes error-safe calls to SwiftMailer transport reset functions before email is being sent. In case reset fails - SMTP connection is restarted, thus maintaining it active for whole application living cycle.
-This is extremely important for long-living applications. E.g. when emails are sent through [Beanstalkd](https://github.com/kr/beanstalkd) + [Supervisor](http://supervisord.org/) + [Laravel Queue Daemon Worker](http://laravel.com/docs/4.2/queues#daemon-queue-worker) architecture, Laravel application never quits - therefore SMTP connection is kept active and timeouts after some time. Resetting and/or restarting SMTP connection automaticaly solves this problem in general.
+This package works in two possible error-safe modes: sends STOP command after every email is sent (default behaviour), and/or sends RESET/STOP+START commands before every email is sent. Such approach ensures SMTP connection is closed to avoid timeouts and broken pipes, or maintains it active for whole application living cycle.
+This is extremely important for long-living applications. E.g. when emails are sent through [Beanstalkd](https://github.com/kr/beanstalkd) + [Supervisor](http://supervisord.org/) + [Laravel Queue Daemon Worker](http://laravel.com/docs/4.2/queues#daemon-queue-worker) architecture, Laravel application never quits - therefore SMTP connection is kept active and timeouts after some time. Stopping, resetting and/or restarting SMTP connection automaticaly solves this problem in general.
 
 **N.B.** While auto-reset feature is great, sometimes it's not a preferred behaviour. Be sure to check your SMTP server configuration before using this package.
 
@@ -64,7 +64,7 @@ Package is built in a way, that nothing special needs to be done. It's basically
 
 ### Auto-reset
 
-Package resets SMTP adapter every time when email is sent (except first call, before SMTP transport is started). You can manipulate this through special helper functions:
+Package starts, stops or resets SMTP adapter every time when email is sent. You can manipulate this through special helper functions:
 
 ```php
 // disable auto reset
@@ -77,10 +77,22 @@ Mailer::setAutoReset(true);
 if ( Mailer::autoResetEnabled() ) { ...
 ```
 
-It is possible to reset SMTP adapter explicitly.
+You can switch between STOP or RESET behaviours using native constants as a flag:
+
+```php
+// send STOP after every email (default)
+Mailer::setModeStop();
+// send RESET before every email
+Mailer::setModeReset();
+// aggressive mode - STOP and RESET
+Mailer::setModeBoth();
+```
+
+It is possible to stop or reset SMTP adapter explicitly.
 
 ```php
 Mailer::reset()->send(...);
+Mailer::stop();
 ```
 
 ### Initialization
@@ -120,7 +132,3 @@ All credits go to [xdecock](https://github.com/xdecock), author of [Swift Mailer
 ## License
 
 Laravel-SwiftMailer package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/YOzaz/laravel-swiftmailer/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
