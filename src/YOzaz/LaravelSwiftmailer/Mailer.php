@@ -156,6 +156,36 @@ class Mailer {
 	}
 
 	/**
+	 * Sets auto reset mode to STOP
+	 *
+	 * @return Mailer
+	 */
+	public function setModeStop()
+	{
+		return $this->setMode( self::AUTO_RESET_MODE_STOP );
+	}
+
+	/**
+	 * Sets auto reset mode to RESET / STOP + START
+	 *
+	 * @return Mailer
+	 */
+	public function setModeReset()
+	{
+		return $this->setMode( self::AUTO_RESET_MODE_RESET );
+	}
+
+	/**
+	 * Sets auto reset mode to both
+	 *
+	 * @return Mailer
+	 */
+	public function setModeBoth()
+	{
+		return $this->setMode( self::AUTO_RESET_MODE_BOTH );
+	}
+
+	/**
 	 * Checks auto reset mode
 	 *
 	 * @param int|array $mode
@@ -468,26 +498,32 @@ class Mailer {
 			'send',
 		);
 
-		if (
-			$this->inMode( self::AUTO_RESET_MODE_RESET, self::AUTO_RESET_MODE_BOTH ) &&
-			$this->autoResetEnabled() &&
-			in_array($method, $intercepted_methods)
-		)
+		if ( in_array($method, $intercepted_methods) )
 		{
-			$this->resetSwiftTransport();
+			if ( $this->autoResetEnabled() && $this->inMode( self::AUTO_RESET_MODE_RESET, self::AUTO_RESET_MODE_BOTH ) )
+			{
+				$this->resetSwiftTransport();
+			}
+
+			$result = null;
+
+			try
+			{
+				$result = call_user_func_array( [$this->mailer, $method], $args );
+			}
+			catch (Exception $e)
+			{
+				// Silence is golden...
+			}
+
+			if ( $this->autoResetEnabled() && $this->inMode( self::AUTO_RESET_MODE_STOP, self::AUTO_RESET_MODE_BOTH ) )
+			{
+				$this->stopSwiftTransport();
+			}
+
+			return $result;
 		}
 
-		$result = call_user_func_array( [$this->mailer, $method], $args );
-
-		if (
-			$this->inMode( self::AUTO_RESET_MODE_STOP, self::AUTO_RESET_MODE_BOTH ) &&
-			$this->autoResetEnabled() &&
-			in_array($method, $intercepted_methods)
-		)
-		{
-			$this->stopSwiftTransport();
-		}
-
-		return $result;
+		return call_user_func_array( [$this->mailer, $method], $args );
 	}
 }
