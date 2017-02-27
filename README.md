@@ -95,6 +95,14 @@ Mailer::reset()->send(...);
 Mailer::stop();
 ```
 
+### Silent mode
+
+By default, failed emails won't trigger fatal error. If that's unexpected behaviour - e.g. because one may want to retry sending it - you can turn this mode off, and normal `Exception` will be thown.
+
+```php
+Mailer::setSilent(false);
+```
+
 ### Initialization
 
 Package has separate IoC binding. **N.B.** This package _does not_ overwrite 'mailer' IoC binding in Laravel for legacy purposes.
