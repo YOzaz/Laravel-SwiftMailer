@@ -2,6 +2,7 @@
 
 use Closure;
 use Exception;
+use ReflectionClass;
 use Illuminate\Support\Str;
 
 class Mailer {
@@ -23,7 +24,7 @@ class Mailer {
 	/**
 	 * Flag if auto-reset is enabled
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $auto_reset;
 
@@ -33,13 +34,18 @@ class Mailer {
 	/**
 	 * Type of auto-reset behaviour
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $reset_mode;
 
 	const AUTO_RESET_MODE_RESET = 1000;
 	const AUTO_RESET_MODE_STOP = 2000;
 	const AUTO_RESET_MODE_BOTH = 5000;
+
+	/**
+	 * @var bool
+	 */
+	protected $silent_mode = true;
 
 	/**
 	 * Create a new Mailer instance.
@@ -190,7 +196,7 @@ class Mailer {
 	 *
 	 * @param int|array $mode
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function inMode( $mode )
 	{
@@ -200,6 +206,20 @@ class Mailer {
 		}
 
 		return in_array( $this->reset_mode, $mode );
+	}
+
+	/**
+	 * Sets silent mode
+	 *
+	 * @param bool $status
+	 *
+	 * @return Mailer
+	 */
+	public function setSilent( $status )
+	{
+		$this->silent_mode = $status;
+
+		return $this;
 	}
 
 	/**
@@ -285,7 +305,12 @@ class Mailer {
 		}
 		catch (Exception $e)
 		{
-			// In case of failure - do nothing
+			// In case of failure - reset object value
+			$reflection = new \ReflectionClass( $transport );
+			$prop = $reflection->getProperty( '_started' );
+			$prop->setAccessible( true );
+			$prop->setValue( $transport, false );
+			$prop->setAccessible( false );
 		}
 	}
 
@@ -367,7 +392,6 @@ class Mailer {
 	 */
 	protected function getQueuedCallable(array $data)
 	{
-
 		if (Str::contains($data['callback'], 'SerializableClosure'))
 		{
 			if ( class_exists('\SuperClosure\Serializer') )
@@ -489,6 +513,7 @@ class Mailer {
 	 * @param array $args
 	 *
 	 * @return mixed
+	 * @throws \Exception
 	 */
 	public function __call( $method, array $args )
 	{
@@ -498,14 +523,15 @@ class Mailer {
 			'send',
 		);
 
-		if ( in_array($method, $intercepted_methods) )
+		if ( $this->autoResetEnabled() && in_array($method, $intercepted_methods) )
 		{
-			if ( $this->autoResetEnabled() && $this->inMode( self::AUTO_RESET_MODE_RESET, self::AUTO_RESET_MODE_BOTH ) )
+			if ( $this->inMode( self::AUTO_RESET_MODE_RESET, self::AUTO_RESET_MODE_BOTH ) )
 			{
 				$this->resetSwiftTransport();
 			}
 
 			$result = null;
+			$exception = null;
 
 			try
 			{
@@ -514,11 +540,22 @@ class Mailer {
 			catch (Exception $e)
 			{
 				// Silence is golden...
+				if ( !$this->silent_mode )
+				{
+					$exception = $e;
+				}
 			}
-
-			if ( $this->autoResetEnabled() && $this->inMode( self::AUTO_RESET_MODE_STOP, self::AUTO_RESET_MODE_BOTH ) )
+			finally
 			{
-				$this->stopSwiftTransport();
+				if ( $this->inMode( self::AUTO_RESET_MODE_STOP, self::AUTO_RESET_MODE_BOTH ) )
+				{
+					$this->stopSwiftTransport();
+				}
+
+				if ( $exception )
+				{
+					throw $exception;
+				}
 			}
 
 			return $result;
