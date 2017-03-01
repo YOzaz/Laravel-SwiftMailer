@@ -53,7 +53,8 @@ That's it! You're all set to go.
 
 ## About
 
-This package works in two possible error-safe modes: sends STOP command after every email is sent (default behaviour), and/or sends RESET/STOP+START commands before every email is sent. Such approach ensures SMTP connection is closed to avoid timeouts and broken pipes, or maintains it active for whole application living cycle.
+This package works in two possible error-safe modes: sends STOP command after every email is sent, and/or sends RESET/STOP+START commands before every email is sent. As a default, both modes are activated (so called "aggressive" mode).
+Such approach ensures SMTP connection is closed to avoid timeouts and broken pipes, or maintains it active for whole application living cycle.
 This is extremely important for long-living applications. E.g. when emails are sent through [Beanstalkd](https://github.com/kr/beanstalkd) + [Supervisor](http://supervisord.org/) + [Laravel Queue Daemon Worker](http://laravel.com/docs/4.2/queues#daemon-queue-worker) architecture, Laravel application never quits - therefore SMTP connection is kept active and timeouts after some time. Stopping, resetting and/or restarting SMTP connection automaticaly solves this problem in general.
 
 **N.B.** While auto-reset feature is great, sometimes it's not a preferred behaviour. Be sure to check your SMTP server configuration before using this package.
@@ -80,11 +81,11 @@ if ( Mailer::autoResetEnabled() ) { ...
 You can switch between STOP or RESET behaviours using native constants as a flag:
 
 ```php
-// send STOP after every email (default)
+// send only STOP after every email
 Mailer::setModeStop();
-// send RESET before every email
+// send only RESET before every email
 Mailer::setModeReset();
-// aggressive mode - STOP and RESET
+// aggressive mode - STOP and RESET (default)
 Mailer::setModeBoth();
 ```
 
@@ -97,11 +98,13 @@ Mailer::stop();
 
 ### Silent mode
 
-By default, failed emails won't trigger fatal error. If that's unexpected behaviour - e.g. because one may want to retry sending it - you can turn this mode off, and normal `Exception` will be thown.
+By default, failed emails will throw an `Exception`. If that's unexpected behaviour - e.g. because you don't need retry sending it - you can turn this mode on.
 
 ```php
-Mailer::setSilent(false);
+Mailer::setSilent(true);
 ```
+
+**N.B.** Even if email will fail, before carrying over an `Exception`, package will try sending STOP command anyway (if such mode is enabled).
 
 ### Initialization
 
