@@ -38,14 +38,17 @@ class Mailer {
 	 */
 	protected $reset_mode;
 
+	// Sends RESET/START before email
 	const AUTO_RESET_MODE_RESET = 1000;
+	// Sends STOP after email
 	const AUTO_RESET_MODE_STOP = 2000;
+	// Sends RESET/START before and STOP after email
 	const AUTO_RESET_MODE_BOTH = 5000;
 
 	/**
 	 * @var bool
 	 */
-	protected $silent_mode = true;
+	protected $silent_mode = false;
 
 	/**
 	 * Create a new Mailer instance.
@@ -57,7 +60,7 @@ class Mailer {
 	public function __construct(
 		$mailer = null,
 		$enable_auto_reset = self::AUTO_RESET_ENABLED,
-		$auto_reset_mode = self::AUTO_RESET_MODE_STOP )
+		$auto_reset_mode = self::AUTO_RESET_MODE_BOTH )
 	{
 		// dirty check if we're in Laravel
 		if ( !$mailer && function_exists('app') )
